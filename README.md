@@ -40,7 +40,7 @@ BriefBot employs a unique reasoning methodology:
 ```bash
 # Clone the repository
 git clone https://github.com/Neutrino2003/BriefBot.git
-cd briefbot
+cd BriefBot
 
 # Install dependencies
 pip install -r requirements.txt
