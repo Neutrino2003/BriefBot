@@ -1,0 +1,14 @@
+gradio>=4.0.0
+openai
+tiktoken
+langchain-community
+langchain-nomic
+langchain-text-splitters
+nomic
+llama-cloud-services
+requests
+python-dotenv
+qdrant-client
+llama-index-core
+langchain
+ipython
