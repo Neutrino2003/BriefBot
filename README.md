@@ -45,55 +45,6 @@ cd briefbot
 # Install dependencies
 pip install -r requirements.txt
 
-```markdown
-# BriefBot: Retrieval Augmented Thoughts for Enhanced AI Reasoning
-
-**BriefBot** is an intelligent system that combines advanced retrieval techniques with generative AI to create more accurate, context-aware responses. By implementing **Retrieval Augmented Thoughts (RAT)**, the system builds on traditional RAG approaches by iteratively retrieving and incorporating relevant information during the generation process.
-
----
-
-## 🔍 Key Features
-
-- **Retrieval Augmented Thoughts (RAT):** Iterative retrieval during generation process that verifies and improves each reasoning step  
-- **Document Processing:** Upload and analyze PDF documents using LlamaParse  
-- **Nomic Atlas Integration:** Connect to semantic vector databases for powerful knowledge retrieval  
-- **Side-by-Side Comparison:** Compare RAT vs traditional RAG performance  
-- **Interactive UI:** User-friendly Gradio interface for seamless interaction  
-
----
-
-## 🛠️ Architecture
-
-BriefBot employs a unique reasoning methodology:
-
-1. **Initial Draft Generation**: Creates a structured response with multiple reasoning steps  
-2. **Paragraph-Level Verification**: For each section of the answer:  
-   - Generates targeted search queries  
-   - Retrieves relevant information from Nomic Atlas  
-   - Revises content based on retrieved knowledge  
-3. **Final Refinement**: Structures and formats the response for clarity and completeness  
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Python 3.8+  
-- Nomic API key  
-- LlamaCloud API key (for document parsing)  
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/your-username/briefbot.git
-cd briefbot
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
 ### Running the Application
 
 ```bash
@@ -159,6 +110,13 @@ RAT generally outperforms traditional RAG in:
 - **User Interface:** Gradio for interactive web components  
 
 ---
+## Results
+![BriefBot UI](results/250417_19h55m09s_screenshot.png)
+![BriefBot UI](results/250417_19h59m18s_screenshot.png)
+![BriefBot UI](results/250417_20h02m058s_screenshot.png)
+![BriefBot UI](results/250417_20h19m41s_screenshot.png)
+
+
 
 > *Note: This project is a research implementation of Retrieval Augmented Thoughts and is under active development.*
 ```
