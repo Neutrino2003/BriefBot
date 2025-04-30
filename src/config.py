@@ -6,8 +6,8 @@ from langchain_nomic.embeddings import NomicEmbeddings
 from llama_index.core import Settings
 
 # API Keys (loaded from environment variables)
-LLAMA_CLOUD_API_KEY = "llx-nxrF5SQ5MnbMrKhrb1HqfdFA3YajxTDjtjfctsyebDSdBa7W"
-NOMIC_API_KEY = "nk-p4RbLXYiBQInfAQyrlCssat_n9w-697uXrq4dlCmq0o"
+LLAMA_CLOUD_API_KEY = ""
+NOMIC_API_KEY = ""
 
 # LLM settings
 DEFAULT_LLM = "llama3.2"
