@@ -1,17 +1,16 @@
-"""
-Utility functions for generating diffs between text versions
-"""
+"""Generate visual diffs between text versions"""
 from difflib import unified_diff
 from IPython.display import display, HTML
 
 def generate_diff_html(text1: str, text2: str) -> str:
-    """Generate HTML showing the differences between two text strings"""
+    """Create HTML diff showing changes between two texts"""
     diff = unified_diff(text1.splitlines(keepends=True),
                         text2.splitlines(keepends=True),
                         fromfile='text1', tofile='text2')
 
     diff_html = ""
     for line in diff:
+        # Color code diff: green=added, red=removed, blue=context
         if line.startswith('+'):
             diff_html += f"<div style='color:green;'>{line.rstrip()}</div>"
         elif line.startswith('-'):

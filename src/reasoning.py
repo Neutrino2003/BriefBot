@@ -1,6 +1,4 @@
-"""
-RAT and RAG reasoning implementations
-"""
+"""RAT and RAG reasoning implementations"""
 import time
 from datetime import datetime
 from multiprocessing import Process, Queue
@@ -19,20 +17,20 @@ newline_char = '\n'
 
 
 def run_with_timeout(func, timeout, *args, **kwargs):
-    """Run function with timeout using multiprocessing"""
+    """Run function with timeout, terminate if exceeds limit"""
     q = Queue()
     p = Process(target=func, args=(q, *args), kwargs=kwargs)
     p.start()
     p.join(timeout)
-    
+
     if p.is_alive():
         print(f"{datetime.now()} [INFO] Function {str(func)} running timeout ({timeout}s), terminating...")
-        p.terminate() 
-        p.join()  
-        result = None  
+        p.terminate()
+        p.join()
+        result = None
     else:
         print(f"{datetime.now()} [INFO] Function {str(func)} executed successfully.")
-        result = q.get() 
+        result = q.get()
     return result
 
 def get_draft(question):
@@ -48,13 +46,13 @@ Just respond to the instruction directly. DO NOT add additional explanations or 
     return chat.invoke(messages).content
 
 def split_draft(draft, split_char='\n\n'):
-    """Split a draft answer into paragraphs"""
+    """Split draft into paragraphs, filter short ones"""
     paragraphs = draft.split(split_char)
     draft_paragraphs = [para for para in paragraphs if len(para)>5]
     return draft_paragraphs
 
 def split_draft_openai(question, answer, NUM_PARAGRAPHS=4):
-    """Split answer into paragraphs using LLM"""
+    """Use LLM to split answer into semantic paragraphs"""
     split_prompt = f'''
 Split the answer of the question into multiple paragraphs with each paragraph containing a complete thought.
 The answer should be splited into less than {NUM_PARAGRAPHS} paragraphs.
@@ -72,7 +70,7 @@ Just output the query directly. DO NOT add additional explanations or introducem
     return split_draft_paragraphs
 
 def get_query(question, answer):
-    """Generate search query from question and answer"""
+    """Generate search query to verify/enhance current answer"""
     query_prompt = '''
 I want to verify the content correctness of the given question, especially the last sentences.
 Please summarize the content with the corresponding question.
@@ -90,15 +88,15 @@ Just output the query directly. DO NOT add additional explanations or introducem
     return chat.invoke(messages).content
 
 def get_content(query):
-    """Retrieve context from Nomic Atlas"""
+    """Retrieve and truncate documents from Nomic Atlas"""
     retrieved_results = retrieve_context(query)
-    
-    # Check if we have results and if they're dictionaries
+
     if not retrieved_results:
         return []
-        
+
     trunked_texts = []
     for result in retrieved_results:
+        # Extract text from various dict formats
         if isinstance(result, dict):
             if 'text' in result:
                 text = result['text']
@@ -110,14 +108,14 @@ def get_content(query):
                 text = str(result)
         else:
             text = str(result)
-            
+
         if text:
             trunked_texts.append(chunk_text_front(text, 1500).replace('\n', " "))
-            
+
     return trunked_texts
 
 def get_revise_answer(question, answer, content):
-    """Revise answer based on retrieved content"""
+    """Revise answer using retrieved context"""
     revise_prompt = '''
 I want to revise the answer according to retrieved related text of the question in WIKI pages.
 You need to check whether the answer is correct.
@@ -137,7 +135,7 @@ Just output the revised answer directly. DO NOT add additional explanations or a
     return chat.invoke(messages).content
 
 def get_reflect_answer(question, answer):
-    """Add formatting and structure to the final answer"""
+    """Add markdown formatting and structure to final answer"""
     reflect_prompt = '''
 Give a title for the answer of the question.
 And add a subtitle to each paragraph in the answer and output the final answer using markdown format.
@@ -159,7 +157,7 @@ Just output the revised answer directly. DO NOT add additional explanations or a
     ]
     return chat.invoke(messages).content
 
-# Wrapper functions for multiprocessing
+# Multiprocessing wrappers - put results into Queue for inter-process communication
 def get_query_wrapper(q, question, answer):
     result = get_query(question, answer)
     q.put(result)
@@ -177,8 +175,7 @@ def get_reflect_answer_wrapper(q, question, answer):
     q.put(result)
 
 def rat(question):
-    
-    """Full RAT reasoning implementation"""
+    """RAT: Draft → Split → For each para: Query → Retrieve → Revise → Final Format"""
     print(f"{datetime.now()} [INFO] Generating draft...")
     draft = get_draft(question)
     print(f"{datetime.now()} [INFO] Return draft.")
@@ -186,7 +183,7 @@ def rat(question):
     print(f"{datetime.now()} [INFO] Processing draft ...")
     draft_paragraphs = split_draft_openai(question, draft)
     print(f"{datetime.now()} [INFO] Draft is splitted into {len(draft_paragraphs)} sections.")
-    
+
     answer = ""
     for i, p in enumerate(draft_paragraphs):
         print(f"{datetime.now()} [INFO] Revising {i+1}/{len(draft_paragraphs)} sections ...")
@@ -201,6 +198,7 @@ def rat(question):
         else:
             query = res
             print(f">>> {i}/{len(draft_paragraphs)} Query: {query.replace(newline_char, ' ')}")
+
         # Retrieve content
         print(f"{datetime.now()} [INFO] Retrieving documents ...")
         res = run_with_timeout(get_content_wrapper, 300, query)
@@ -210,10 +208,10 @@ def rat(question):
         else:
             content = res
 
-        # Revise answer with retrieved content
+        # Revise answer with retrieved content (up to LIMIT docs)
         LIMIT = 2
         for j, c in enumerate(content):
-            if j >= LIMIT:  # limit the number of documents
+            if j >= LIMIT:
                 break
             print(f"{datetime.now()} [INFO] Revising answers with retrieved documents...[{j}/{min(len(content),LIMIT)}]")
             res = run_with_timeout(get_revise_answer_wrapper, 300, question, answer, c)
@@ -226,30 +224,33 @@ def rat(question):
                 answer = res
             print(f"{datetime.now()} [INFO] Answer revised [{j}/{min(len(content),LIMIT)}]")
 
-    # Final reflection and formatting
+    # Final formatting
     res = run_with_timeout(get_reflect_answer_wrapper, 300, question, answer)
     if not res:
         print(f"{datetime.now()} [INFO] Reflecting answers timeout, skipping next steps...")
     else:
         answer = res
-    
+
     return draft, answer
 
 def simple_rag(question):
-    """Simple RAG implementation with single retrieval step"""
+    """Simple RAG: Retrieve once → Generate answer with context → Format"""
+    # Retrieve context documents
     context = retrieve_context(question, k=5)
     context_str = "\n\n".join([chunk_text_front(c.get('text', ''), 1500) for c in context])
-    
+
+    # Generate answer with context
     prompt = f"""Answer the question based on the following context:
-    
+
     {context_str}
-    
+
     Question: {question}
     """
-    
+
     chat = ChatOllama(model=llm, temperature=DEFAULT_TEMPERATURE)
     messages = [HumanMessage(content=prompt)]
     answer = chat.invoke(messages).content
-    
+
+    # Format final answer
     formatted_answer = get_reflect_answer(question, answer)
     return formatted_answer
