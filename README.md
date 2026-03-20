@@ -125,17 +125,16 @@ Question → Generate Draft → Split into Paragraphs
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/briefbot.git
-cd briefbot
+git clone https://github.com/Neutrino2003/BriefBot.git
+cd BriefBot
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment variables
+# Set up environment variables (optional)
 cp .env.example .env
 # Edit .env and add your API keys
 ```
-
 ### Running the Application
 
 ```bash
@@ -206,6 +205,14 @@ BriefBot/
 ├── requirements.txt             # Python dependencies
 └── README.md                    # This file
 ```
+
+---
+## 📸 Results
+
+![BriefBot UI](results/SS1.png)
+![BriefBot UI](results/SS2.png)
+![BriefBot UI](results/SS3.png)
+![BriefBot UI](results/SS4.png)
 
 ---
 
